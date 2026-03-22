@@ -524,6 +524,14 @@
 	</PreferenceCategory>
 	<!-- end Add by MFO -->
 
+    <PreferenceCategory app:title="@string/settings_car_head_unit">
+        <SwitchPreference
+            android:key="car_ui_mode"
+            android:title="@string/settings_car_ui_mode"
+            android:summary="@string/settings_car_ui_mode_summary"
+            android:defaultValue="false" />
+    </PreferenceCategory>
+
     <PreferenceCategory app:title="@string/settings_about_title">
         <Preference
             app:selectable="false"

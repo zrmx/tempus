@@ -101,6 +101,8 @@ object Preferences {
 	private const val AA_SECOND_TAB = "androidauto_second_tab"
 	private const val AA_THIRD_TAB = "androidauto_third_tab"
 	private const val AA_FOURTH_TAB = "androidauto_fourth_tab"
+
+    private const val CAR_UI_MODE = "car_ui_mode"
     
 	@JvmStatic
     fun getServer(): String? {
@@ -812,5 +814,15 @@ object Preferences {
     fun getAndroidAutoFourthTab(): Int {
         return App.getInstance().preferences.getString(AA_FOURTH_TAB, "3")!!.toInt()
     }
-	
+
+    @JvmStatic
+    fun isCarUiModeEnabled(): Boolean {
+        return App.getInstance().preferences.getBoolean(CAR_UI_MODE, false)
+    }
+
+    @JvmStatic
+    fun setCarUiModeEnabled(enabled: Boolean) {
+        App.getInstance().preferences.edit().putBoolean(CAR_UI_MODE, enabled).apply()
+    }
+
 }

@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 
@@ -54,6 +55,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.navigation.NavigationView;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.Objects;
@@ -85,6 +87,10 @@ public class MainActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         SplashScreen.installSplashScreen(this);
         DynamicColors.applyToActivityIfAvailable(this);
+
+        if (Preferences.isCarUiModeEnabled()) {
+            getTheme().applyStyle(R.style.AppTheme_CarUiMode, true);
+        }
 
         super.onCreate(savedInstanceState);
 
@@ -144,6 +150,61 @@ public class MainActivity extends BaseActivity {
             collapseBottomSheetDelayed();
         else
             super.onBackPressed();
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getAction() != KeyEvent.ACTION_DOWN) {
+            return super.dispatchKeyEvent(event);
+        }
+        int keyCode = event.getKeyCode();
+        ListenableFuture<androidx.media3.session.MediaBrowser> future = getMediaBrowserListenableFuture();
+        if (future == null || !future.isDone()) {
+            return super.dispatchKeyEvent(event);
+        }
+        androidx.media3.session.MediaBrowser browser;
+        try {
+            browser = future.get();
+        } catch (ExecutionException | InterruptedException e) {
+            android.util.Log.w(TAG, "dispatchKeyEvent: could not get MediaBrowser for key " + keyCode, e);
+            return super.dispatchKeyEvent(event);
+        }
+        if (browser == null) {
+            return super.dispatchKeyEvent(event);
+        }
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_MEDIA_PLAY:
+                browser.play();
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                browser.pause();
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+            case KeyEvent.KEYCODE_HEADSETHOOK:
+                if (browser.isPlaying()) {
+                    browser.pause();
+                } else {
+                    browser.play();
+                }
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_NEXT:
+                browser.seekToNextMediaItem();
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+                browser.seekToPreviousMediaItem();
+                return true;
+            case KeyEvent.KEYCODE_DPAD_CENTER:
+            case KeyEvent.KEYCODE_ENTER:
+                // Toggle play/pause on D-pad centre/enter for in-car rotary controls
+                if (browser.isPlaying()) {
+                    browser.pause();
+                } else {
+                    browser.play();
+                }
+                return true;
+            default:
+                return super.dispatchKeyEvent(event);
+        }
     }
 
     public void init() {
