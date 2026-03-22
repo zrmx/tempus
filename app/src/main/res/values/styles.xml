@@ -68,4 +68,10 @@
         <item name="background">?attr/colorErrorContainer</item>
         <item name="android:textColor">?attr/colorOnErrorContainer</item>
     </style>
+
+    <!-- Car UI mode overlay: larger text and touch targets for head-unit use -->
+    <style name="AppTheme.CarUiMode" parent="AppTheme">
+        <item name="android:textSize">@dimen/car_text_size_primary</item>
+        <item name="android:minHeight">@dimen/car_touch_target_min</item>
+    </style>
 </resources>
