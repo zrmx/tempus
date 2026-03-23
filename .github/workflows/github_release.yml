@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
   build:
@@ -47,6 +52,7 @@ jobs:
 
       - name: Sign Tempus Release APKs
         id: sign_tempus_release
+        if: github.event_name == 'push'
         uses: r0adkll/sign-android-release@v1
         with:
           releaseDirectory: app/build/outputs/apk/tempus/release
@@ -58,6 +64,7 @@ jobs:
           BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
 
       - name: Prepare Signed Tempus APKs for Release
+        if: github.event_name == 'push'
         run: |
           TEMPUS_PATH=app/build/outputs/apk/tempus/release
           
@@ -79,6 +86,7 @@ jobs:
 
       - name: Sign Degoogled Release APKs
         id: sign_degoogled_release
+        if: github.event_name == 'push'
         uses: r0adkll/sign-android-release@v1
         with:
           releaseDirectory: app/build/outputs/apk/degoogled/release
@@ -90,6 +98,7 @@ jobs:
           BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
 
       - name: Prepare Signed Degoogled APKs for Release
+        if: github.event_name == 'push'
         run: |
           DEGOOGLED_PATH=app/build/outputs/apk/degoogled/release
           
@@ -112,6 +121,7 @@ jobs:
 
       - name: Create Release
         id: create_release
+        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
@@ -122,8 +132,19 @@ jobs:
           files: ./release-artifacts/*.apk
 
       - name: Upload Release APKs as artifacts (For easy pipeline access)
+        if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: release-apks
           path: ./release-artifacts/*.apk
           retention-days: 30
+
+      - name: Upload PR APKs as artifacts
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-apks
+          path: |
+            app/build/outputs/apk/tempus/release/*.apk
+            app/build/outputs/apk/degoogled/release/*.apk
+          retention-days: 14
