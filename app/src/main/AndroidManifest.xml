@@ -9,6 +9,13 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
+    <!-- Universal APK: optional automotive declaration so this APK installs on both
+         standard Android phones and Android Automotive OS car head units.
+         required="false" means automotive hardware is supported but not mandatory. -->
+    <uses-feature
+        android:name="android.hardware.type.automotive"
+        android:required="false" />
+
     <application
         android:name="App"
         android:allowBackup="false"

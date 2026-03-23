@@ -6,11 +6,18 @@
 * feat: add hardware media key (steering wheel button) support — handles KEYCODE_MEDIA_PLAY_PAUSE, KEYCODE_MEDIA_PLAY, KEYCODE_MEDIA_PAUSE, KEYCODE_MEDIA_NEXT, KEYCODE_MEDIA_PREVIOUS, KEYCODE_HEADSETHOOK, DPAD_CENTER/ENTER
 * feat: add Car UI mode toggle in Settings → Car Head Unit
 * Car UI mode OFF: appearance and behaviour remain at prior defaults
+* fix: universal APK — single build installs on standard Android phones and Android Automotive OS (AAOS) car head units; `android.hardware.type.automotive` declared optional so no automotive-only install gate is created
+
+**Universal APK:**
+- One APK installs on regular Android phones, Android tablets, and Android Automotive OS car head units.
+- Manifest declares `android.hardware.type.automotive` as `required="false"` — the app supports but does not require automotive hardware.
+- Car UI mode is a runtime toggle; no separate APK or product flavor is needed for car-head-unit use.
 
 **Car UI mode — what changes:**
 - Text sizes increased across primary surfaces for easier readability on car screens
 - Minimum touch target height raised for safer in-car interaction
 - Steering wheel/hardware media keys reliably control playback via the active MediaSession
+- Toggling Car UI mode in Settings restarts the activity to apply the updated theme immediately
 
 **Supported hardware keys:**
 - KEYCODE_MEDIA_PLAY — resume playback

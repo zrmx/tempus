@@ -160,6 +160,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         actionKeepScreenOn();
         actionAutoDownloadLyrics();
         actionMiniPlayerHeart();
+        actionCarUiMode();
 
         bindMediaService();
         actionAppEqualizer();
@@ -546,6 +547,23 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 } else {
                     activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 }
+            }
+            return true;
+        });
+    }
+
+    private void actionCarUiMode() {
+        SwitchPreference preference = findPreference("car_ui_mode");
+        if (preference == null) {
+            return;
+        }
+
+        preference.setChecked(Preferences.isCarUiModeEnabled());
+        preference.setOnPreferenceChangeListener((pref, newValue) -> {
+            if (newValue instanceof Boolean) {
+                Preferences.setCarUiModeEnabled((Boolean) newValue);
+                // Theme overlay is applied at onCreate; restart activity to apply change.
+                activity.recreate();
             }
             return true;
         });
