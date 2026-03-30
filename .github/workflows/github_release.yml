@@ -42,12 +42,22 @@ jobs:
 
       - name: Build All Release APKs
         id: build
+        if: github.event_name == 'push'
         run: |
           # Only build release variants (removed debug builds)
           bash ./gradlew assembleTempusRelease
           bash ./gradlew assembleDegoogledRelease
 
+      - name: Build All Debug APKs
+        id: build_debug
+        if: github.event_name == 'pull_request'
+        run: |
+          # Debug APKs are signed with the default debug keystore and are installable from CI artifacts.
+          bash ./gradlew assembleTempusDebug
+          bash ./gradlew assembleDegoogledDebug
+
       - name: Create Artifact Staging Directory
+        if: github.event_name == 'push'
         run: mkdir -p release-artifacts
 
       - name: Sign Tempus Release APKs
@@ -143,8 +153,8 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: pr-apks
+          name: pr-apks-debug
           path: |
-            app/build/outputs/apk/tempus/release/*.apk
-            app/build/outputs/apk/degoogled/release/*.apk
+            app/build/outputs/apk/tempus/debug/*.apk
+            app/build/outputs/apk/degoogled/debug/*.apk
           retention-days: 14
