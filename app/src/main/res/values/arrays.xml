@@ -318,6 +318,23 @@
         <item>14</item>
         <item>15</item>
     </string-array>
+
+    <string-array name="steering_action_titles">
+        <item>Do nothing</item>
+        <item>Toggle play/pause</item>
+        <item>Play</item>
+        <item>Pause</item>
+        <item>Next track</item>
+        <item>Previous track</item>
+    </string-array>
+    <string-array name="steering_action_values">
+        <item>none</item>
+        <item>toggle_play_pause</item>
+        <item>play</item>
+        <item>pause</item>
+        <item>next</item>
+        <item>previous</item>
+    </string-array>
 	<!-- end Add by MFO -->
 	
 </resources>

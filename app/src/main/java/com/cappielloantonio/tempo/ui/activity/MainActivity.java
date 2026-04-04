@@ -88,7 +88,7 @@ public class MainActivity extends BaseActivity {
         SplashScreen.installSplashScreen(this);
         DynamicColors.applyToActivityIfAvailable(this);
 
-        if (Preferences.isCarUiModeEnabled()) {
+        if (Preferences.isCarUiModeEnabled() || Preferences.isCarConnectionDetected()) {
             getTheme().applyStyle(R.style.AppTheme_CarUiMode, true);
         }
 
@@ -172,35 +172,26 @@ public class MainActivity extends BaseActivity {
         if (browser == null) {
             return super.dispatchKeyEvent(event);
         }
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_MEDIA_PLAY:
+        String action = Preferences.getSteeringActionForKeyCode(keyCode);
+        switch (action) {
+            case Preferences.STEERING_ACTION_PLAY:
                 browser.play();
                 return true;
-            case KeyEvent.KEYCODE_MEDIA_PAUSE:
+            case Preferences.STEERING_ACTION_PAUSE:
                 browser.pause();
                 return true;
-            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-            case KeyEvent.KEYCODE_HEADSETHOOK:
+            case Preferences.STEERING_ACTION_TOGGLE_PLAY_PAUSE:
                 if (browser.isPlaying()) {
                     browser.pause();
                 } else {
                     browser.play();
                 }
                 return true;
-            case KeyEvent.KEYCODE_MEDIA_NEXT:
+            case Preferences.STEERING_ACTION_NEXT:
                 browser.seekToNextMediaItem();
                 return true;
-            case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+            case Preferences.STEERING_ACTION_PREVIOUS:
                 browser.seekToPreviousMediaItem();
-                return true;
-            case KeyEvent.KEYCODE_DPAD_CENTER:
-            case KeyEvent.KEYCODE_ENTER:
-                // Toggle play/pause on D-pad centre/enter for in-car rotary controls
-                if (browser.isPlaying()) {
-                    browser.pause();
-                } else {
-                    browser.play();
-                }
                 return true;
             default:
                 return super.dispatchKeyEvent(event);

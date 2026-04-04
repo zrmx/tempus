@@ -1,6 +1,7 @@
 package com.cappielloantonio.tempo.util
 
 import android.util.Log
+import android.view.KeyEvent
 import androidx.media3.common.Player
 import com.cappielloantonio.tempo.App
 import com.cappielloantonio.tempo.model.HomeSector
@@ -103,6 +104,19 @@ object Preferences {
 	private const val AA_FOURTH_TAB = "androidauto_fourth_tab"
 
     private const val CAR_UI_MODE = "car_ui_mode"
+    private const val CAR_CONNECTION_DETECTED = "car_connection_detected"
+    private const val STEERING_KEY_PLAY_PAUSE = "steering_key_play_pause"
+    private const val STEERING_KEY_NEXT = "steering_key_next"
+    private const val STEERING_KEY_PREVIOUS = "steering_key_previous"
+    private const val STEERING_KEY_HEADSETHOOK = "steering_key_headsethook"
+    private const val STEERING_KEY_DPAD_CENTER = "steering_key_dpad_center"
+
+    const val STEERING_ACTION_NONE = "none"
+    const val STEERING_ACTION_TOGGLE_PLAY_PAUSE = "toggle_play_pause"
+    const val STEERING_ACTION_PLAY = "play"
+    const val STEERING_ACTION_PAUSE = "pause"
+    const val STEERING_ACTION_NEXT = "next"
+    const val STEERING_ACTION_PREVIOUS = "previous"
     
 	@JvmStatic
     fun getServer(): String? {
@@ -823,6 +837,34 @@ object Preferences {
     @JvmStatic
     fun setCarUiModeEnabled(enabled: Boolean) {
         App.getInstance().preferences.edit().putBoolean(CAR_UI_MODE, enabled).apply()
+    }
+
+    @JvmStatic
+    fun isCarConnectionDetected(): Boolean {
+        return App.getInstance().preferences.getBoolean(CAR_CONNECTION_DETECTED, false)
+    }
+
+    @JvmStatic
+    fun setCarConnectionDetected(detected: Boolean) {
+        App.getInstance().preferences.edit().putBoolean(CAR_CONNECTION_DETECTED, detected).apply()
+    }
+
+    private fun getSteeringAction(key: String, defaultValue: String): String {
+        return App.getInstance().preferences.getString(key, defaultValue) ?: defaultValue
+    }
+
+    @JvmStatic
+    fun getSteeringActionForKeyCode(keyCode: Int): String {
+        return when (keyCode) {
+            KeyEvent.KEYCODE_MEDIA_PLAY -> STEERING_ACTION_PLAY
+            KeyEvent.KEYCODE_MEDIA_PAUSE -> STEERING_ACTION_PAUSE
+            KeyEvent.KEYCODE_MEDIA_NEXT -> getSteeringAction(STEERING_KEY_NEXT, STEERING_ACTION_NEXT)
+            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> getSteeringAction(STEERING_KEY_PREVIOUS, STEERING_ACTION_PREVIOUS)
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> getSteeringAction(STEERING_KEY_PLAY_PAUSE, STEERING_ACTION_TOGGLE_PLAY_PAUSE)
+            KeyEvent.KEYCODE_HEADSETHOOK -> getSteeringAction(STEERING_KEY_HEADSETHOOK, STEERING_ACTION_TOGGLE_PLAY_PAUSE)
+            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> getSteeringAction(STEERING_KEY_DPAD_CENTER, STEERING_ACTION_TOGGLE_PLAY_PAUSE)
+            else -> STEERING_ACTION_NONE
+        }
     }
 
 }

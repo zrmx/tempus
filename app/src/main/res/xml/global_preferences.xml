@@ -525,11 +525,57 @@
 	<!-- end Add by MFO -->
 
     <PreferenceCategory app:title="@string/settings_car_head_unit">
+        <Preference
+            android:key="car_connection_status"
+            android:title="@string/settings_car_detected_status_title"
+            android:summary="@string/settings_car_detected_status_not_connected"
+            app:selectable="false" />
+
         <SwitchPreference
             android:key="car_ui_mode"
             android:title="@string/settings_car_ui_mode"
             android:summary="@string/settings_car_ui_mode_summary"
             android:defaultValue="false" />
+
+        <ListPreference
+            android:key="steering_key_play_pause"
+            android:title="@string/settings_steering_key_play_pause"
+            android:defaultValue="toggle_play_pause"
+            app:entries="@array/steering_action_titles"
+            app:entryValues="@array/steering_action_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            android:key="steering_key_next"
+            android:title="@string/settings_steering_key_next"
+            android:defaultValue="next"
+            app:entries="@array/steering_action_titles"
+            app:entryValues="@array/steering_action_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            android:key="steering_key_previous"
+            android:title="@string/settings_steering_key_previous"
+            android:defaultValue="previous"
+            app:entries="@array/steering_action_titles"
+            app:entryValues="@array/steering_action_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            android:key="steering_key_headsethook"
+            android:title="@string/settings_steering_key_headsethook"
+            android:defaultValue="toggle_play_pause"
+            app:entries="@array/steering_action_titles"
+            app:entryValues="@array/steering_action_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            android:key="steering_key_dpad_center"
+            android:title="@string/settings_steering_key_dpad_center"
+            android:defaultValue="toggle_play_pause"
+            app:entries="@array/steering_action_titles"
+            app:entryValues="@array/steering_action_values"
+            app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/settings_about_title">

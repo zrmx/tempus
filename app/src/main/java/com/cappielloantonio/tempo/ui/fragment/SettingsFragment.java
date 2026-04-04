@@ -160,6 +160,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         actionKeepScreenOn();
         actionAutoDownloadLyrics();
         actionMiniPlayerHeart();
+        updateCarConnectionStatus();
 
         bindMediaService();
         actionAppEqualizer();
@@ -521,6 +522,18 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             }
             return true;
         });
+    }
+
+    private void updateCarConnectionStatus() {
+        Preference carConnectionStatus = findPreference("car_connection_status");
+        if (carConnectionStatus == null) {
+            return;
+        }
+        carConnectionStatus.setSummary(
+                Preferences.isCarConnectionDetected()
+                        ? R.string.settings_car_detected_status_connected
+                        : R.string.settings_car_detected_status_not_connected
+        );
     }
 
     private void getScanStatus() {
