@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
-import android.graphics.Rect;
-import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -104,7 +102,7 @@ public class MainActivity extends BaseActivity {
         connectivityStatusBroadcastReceiver = new ConnectivityStatusBroadcastReceiver(this);
         connectivityStatusReceiverManager(true);
 
-        isLandscape = (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
+        updateLandscapeMode(getResources().getConfiguration());
 
         init();
         checkConnectionType();
@@ -126,7 +124,25 @@ public class MainActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         pingServer();
-        toggleNavigationDrawerLockOnOrientationChange();
+        handleWindowModeChange(getResources().getConfiguration());
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        handleWindowModeChange(newConfig);
+    }
+
+    @Override
+    public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
+        super.onMultiWindowModeChanged(isInMultiWindowMode);
+        handleWindowModeChange(getResources().getConfiguration());
+    }
+
+    @Override
+    public void onMultiWindowModeChanged(boolean isInMultiWindowMode, @NonNull Configuration newConfig) {
+        super.onMultiWindowModeChanged(isInMultiWindowMode, newConfig);
+        handleWindowModeChange(newConfig);
     }
 
     @Override
@@ -355,15 +371,17 @@ public class MainActivity extends BaseActivity {
     }
 
     public void toggleBottomNavigationBarVisibilityOnOrientationChange() {
+        boolean isInSplitScreen = isInMultiWindowMode();
+
         // Ignore orientation change, bottom navbar always hidden
         if (Preferences.getHideBottomNavbarOnPortrait()) {
             setBottomNavigationBarVisibility(false);
             setPortraitPlayerBottomSheetPeekHeight(56);
-            setSystemBarsVisibility(!isLandscape);
+            setSystemBarsVisibility(!isLandscape || isInSplitScreen);
             return;
         }
 
-        if (!isLandscape) {
+        if (!isLandscape || isInSplitScreen) {
             // Show app navbar + show system bars
             setPortraitPlayerBottomSheetPeekHeight(136);
             setBottomNavigationBarVisibility(true);
@@ -397,6 +415,10 @@ public class MainActivity extends BaseActivity {
     }
 
     public void setSystemBarsVisibility(boolean visibility) {
+        if (isInMultiWindowMode()) {
+            visibility = true;
+        }
+
         WindowInsetsControllerCompat insetsController;
         View decorView = getWindow().getDecorView();
         insetsController = new WindowInsetsControllerCompat(getWindow(), decorView);
@@ -413,6 +435,19 @@ public class MainActivity extends BaseActivity {
             insetsController.hide(WindowInsetsCompat.Type.statusBars());
             insetsController.setSystemBarsBehavior(
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        }
+    }
+
+    private void updateLandscapeMode(@NonNull Configuration configuration) {
+        isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE;
+    }
+
+    private void handleWindowModeChange(@NonNull Configuration configuration) {
+        updateLandscapeMode(configuration);
+        toggleNavigationDrawerLockOnOrientationChange();
+
+        if (bottomNavigationView != null && bottomNavigationView.getVisibility() == View.VISIBLE) {
+            toggleBottomNavigationBarVisibilityOnOrientationChange();
         }
     }
 

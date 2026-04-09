@@ -42,9 +42,9 @@ jobs:
 
       - name: Build All Release APKs
         id: build
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
         run: |
-          # Only build release variants (removed debug builds)
+          # Build release variants for tagged pushes and PR validation.
           bash ./gradlew assembleTempusRelease
           bash ./gradlew assembleDegoogledRelease
 
@@ -149,7 +149,7 @@ jobs:
           path: ./release-artifacts/*.apk
           retention-days: 30
 
-      - name: Upload PR APKs as artifacts
+      - name: Upload PR Debug APKs as artifacts
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
@@ -157,4 +157,14 @@ jobs:
           path: |
             app/build/outputs/apk/tempus/debug/*.apk
             app/build/outputs/apk/degoogled/debug/*.apk
+          retention-days: 14
+
+      - name: Upload PR Release APKs as artifacts
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-apks-release
+          path: |
+            app/build/outputs/apk/tempus/release/*.apk
+            app/build/outputs/apk/degoogled/release/*.apk
           retention-days: 14
