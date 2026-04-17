@@ -159,12 +159,43 @@ jobs:
             app/build/outputs/apk/degoogled/debug/*.apk
           retention-days: 14
 
+      - name: Sign PR Release APKs (debug key)
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          mkdir -p pr-release-artifacts
+
+          keytool -genkeypair -v \
+            -keystore pr-debug.keystore \
+            -storepass android \
+            -alias androiddebugkey \
+            -keypass android \
+            -dname "CN=Android Debug,O=Android,C=US" \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000
+
+          APKSIGNER="${ANDROID_HOME}/build-tools/${BUILD_TOOL_VERSION}/apksigner"
+          if [ ! -x "$APKSIGNER" ]; then
+            APKSIGNER="/usr/local/lib/android/sdk/build-tools/${BUILD_TOOL_VERSION}/apksigner"
+          fi
+
+          find app/build/outputs/apk -path '*/release/*-unsigned.apk' -print0 | while IFS= read -r -d '' apk; do
+            signed_name="$(basename "$apk" | sed 's/-unsigned\.apk$/.apk/')"
+            "$APKSIGNER" sign \
+              --ks pr-debug.keystore \
+              --ks-key-alias androiddebugkey \
+              --ks-pass pass:android \
+              --key-pass pass:android \
+              --out "pr-release-artifacts/${signed_name}" \
+              "$apk"
+            "$APKSIGNER" verify "pr-release-artifacts/${signed_name}"
+          done
+
       - name: Upload PR Release APKs as artifacts
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: pr-apks-release
-          path: |
-            app/build/outputs/apk/tempus/release/*.apk
-            app/build/outputs/apk/degoogled/release/*.apk
+          path: pr-release-artifacts/*.apk
           retention-days: 14
