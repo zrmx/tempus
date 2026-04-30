@@ -40,15 +40,27 @@ public class BaseActivity extends AppCompatActivity {
     protected void attachBaseContext(Context newBase) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(newBase);
         float fontScale = 1.0f;
+        float layoutScale = 1.0f;
         try {
             String configuredScale = sharedPreferences.getString(CAR_UI_FONT_SCALE_KEY, "1.00");
             fontScale = configuredScale != null ? Float.parseFloat(configuredScale) : 1.0f;
         } catch (NumberFormatException ignored) {
             fontScale = 1.0f;
         }
+        try {
+            String configuredScale = sharedPreferences.getString("car_ui_layout_scale", "1.00");
+            layoutScale = configuredScale != null ? Float.parseFloat(configuredScale) : 1.0f;
+        } catch (NumberFormatException ignored) {
+            layoutScale = 1.0f;
+        }
+
+        fontScale = Math.max(1.0f, Math.min(9.0f, fontScale));
+        layoutScale = Math.max(1.0f, Math.min(9.0f, layoutScale));
 
         Configuration configuration = new Configuration(newBase.getResources().getConfiguration());
         configuration.fontScale = fontScale;
+        int baseDensityDpi = newBase.getResources().getConfiguration().densityDpi;
+        configuration.densityDpi = Math.round(baseDensityDpi * layoutScale);
         Context context = newBase.createConfigurationContext(configuration);
         super.attachBaseContext(context);
     }

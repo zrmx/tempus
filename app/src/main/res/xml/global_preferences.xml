@@ -538,6 +538,14 @@
             android:defaultValue="false" />
 
         <ListPreference
+            android:key="car_ui_layout_scale"
+            android:title="@string/settings_car_layout_scale"
+            android:defaultValue="1.00"
+            app:entries="@array/car_font_size_titles"
+            app:entryValues="@array/car_font_size_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
             android:key="car_ui_font_scale"
             android:title="@string/settings_car_font_size"
             android:defaultValue="1.00"

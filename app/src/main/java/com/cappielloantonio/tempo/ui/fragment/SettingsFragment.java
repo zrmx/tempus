@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.media.audiofx.AudioEffect;
 import android.net.Uri;
 import android.os.Bundle;
@@ -23,7 +24,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.os.LocaleListCompat;
 import androidx.lifecycle.ViewModelProvider;
@@ -31,6 +31,7 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.preference.PreferenceManager;
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
@@ -73,6 +74,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
     private MediaService.LocalBinder mediaServiceBinder;
     private boolean isServiceBound = false;
+    private SharedPreferences.OnSharedPreferenceChangeListener steeringPreferenceListener;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -167,6 +169,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         actionSteeringHotSetting();
         actionSteeringKeyCapture();
         updateSteeringCaptureSummaries();
+        registerSteeringPreferenceListener();
 
         bindMediaService();
         actionAppEqualizer();
@@ -543,8 +546,15 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     }
 
     private void actionCarUiSizing() {
+        ListPreference layoutScalePreference = findPreference("car_ui_layout_scale");
         ListPreference fontScalePreference = findPreference("car_ui_font_scale");
         ListPreference iconScalePreference = findPreference("car_ui_icon_scale");
+        if (layoutScalePreference != null) {
+            layoutScalePreference.setOnPreferenceChangeListener((preference, newValue) -> {
+                activity.recreate();
+                return true;
+            });
+        }
         if (fontScalePreference != null) {
             fontScalePreference.setOnPreferenceChangeListener((preference, newValue) -> {
                 activity.recreate();
@@ -589,7 +599,9 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 continue;
             }
             preference.setOnPreferenceClickListener(pref -> {
-                openSteeringCaptureDialog(key);
+                Preferences.setSteeringCaptureTarget(key);
+                preference.setSummary(R.string.settings_steering_capture_waiting);
+                Toast.makeText(requireContext(), R.string.settings_steering_capture_waiting, Toast.LENGTH_SHORT).show();
                 return true;
             });
         }
@@ -632,33 +644,43 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             return;
         }
 
+        if (key.equals(Preferences.getSteeringCaptureTarget())) {
+            preference.setSummary(R.string.settings_steering_capture_waiting);
+            return;
+        }
+
         int keyCode = Preferences.getSteeringKeyCodeForPreference(key);
         String keyName = KeyEvent.keyCodeToString(keyCode);
         preference.setSummary(getString(R.string.settings_steering_capture_saved, keyName));
     }
 
-    private void openSteeringCaptureDialog(@NonNull String targetPreferenceKey) {
-        Preferences.setSteeringCaptureTarget(targetPreferenceKey);
-        AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                .setTitle(R.string.settings_steering_capture_title)
-                .setMessage(R.string.settings_steering_capture_message)
-                .setNegativeButton(android.R.string.cancel, (dialogInterface, which) -> Preferences.clearSteeringCaptureTarget())
-                .setOnCancelListener(dialogInterface -> Preferences.clearSteeringCaptureTarget())
-                .create();
+    private void registerSteeringPreferenceListener() {
+        if (steeringPreferenceListener != null) {
+            return;
+        }
 
-        dialog.setOnKeyListener((dialogInterface, keyCode, event) -> {
-            if (event.getAction() != KeyEvent.ACTION_DOWN) {
-                return true;
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        steeringPreferenceListener = (sharedPreferences, key) -> {
+            if (key == null) {
+                return;
             }
-            Preferences.setSteeringKeyCodeForPreference(targetPreferenceKey, keyCode);
-            Preferences.clearSteeringCaptureTarget();
-            updateSteeringCaptureSummary(targetPreferenceKey);
-            Toast.makeText(requireContext(), getString(R.string.settings_steering_capture_saved, KeyEvent.keyCodeToString(keyCode)), Toast.LENGTH_SHORT).show();
-            dialogInterface.dismiss();
-            return true;
-        });
+            if (key.startsWith("steering_key_")) {
+                updateSteeringCaptureSummary(key);
+            }
+            if ("steering_hot_setting".equals(key)) {
+                updateSteeringMappingsEnabled(Preferences.isSteeringHotSettingEnabled());
+            }
+        };
+        preferences.registerOnSharedPreferenceChangeListener(steeringPreferenceListener);
+    }
 
-        dialog.show();
+    private void unregisterSteeringPreferenceListener() {
+        if (steeringPreferenceListener == null || !isAdded()) {
+            return;
+        }
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        preferences.unregisterOnSharedPreferenceChangeListener(steeringPreferenceListener);
+        steeringPreferenceListener = null;
     }
 
     private void getScanStatus() {
@@ -742,6 +764,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     @Override
     public void onPause() {
         super.onPause();
+        unregisterSteeringPreferenceListener();
         if (isServiceBound) {
             requireActivity().unbindService(serviceConnection);
             isServiceBound = false;

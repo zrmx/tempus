@@ -170,8 +170,17 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        if (Preferences.getSteeringCaptureTarget() != null) {
-            return super.dispatchKeyEvent(event);
+        String steeringCaptureTarget = Preferences.getSteeringCaptureTarget();
+        if (steeringCaptureTarget != null) {
+            if (event.getAction() != KeyEvent.ACTION_DOWN) {
+                return true;
+            }
+
+            int keyCode = event.getKeyCode();
+            Preferences.setSteeringKeyCodeForPreference(steeringCaptureTarget, keyCode);
+            Preferences.clearSteeringCaptureTarget();
+            android.widget.Toast.makeText(this, getString(R.string.settings_steering_capture_saved, KeyEvent.keyCodeToString(keyCode)), android.widget.Toast.LENGTH_SHORT).show();
+            return true;
         }
 
         if (!Preferences.isSteeringHotSettingEnabled()) {

@@ -105,6 +105,7 @@ object Preferences {
 
     private const val CAR_UI_MODE = "car_ui_mode"
     private const val CAR_CONNECTION_DETECTED = "car_connection_detected"
+    private const val CAR_UI_LAYOUT_SCALE = "car_ui_layout_scale"
     private const val CAR_UI_FONT_SCALE = "car_ui_font_scale"
     private const val CAR_UI_ICON_SCALE = "car_ui_icon_scale"
     private const val STEERING_HOT_SETTING = "steering_hot_setting"
@@ -851,6 +852,11 @@ object Preferences {
     @JvmStatic
     fun setCarConnectionDetected(detected: Boolean) {
         App.getInstance().preferences.edit().putBoolean(CAR_CONNECTION_DETECTED, detected).apply()
+    }
+
+    @JvmStatic
+    fun getCarUiLayoutScale(): Float {
+        return App.getInstance().preferences.getString(CAR_UI_LAYOUT_SCALE, "1.00")?.toFloatOrNull() ?: 1.00f
     }
 
     @JvmStatic
