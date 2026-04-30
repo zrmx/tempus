@@ -170,6 +170,10 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        if (!Preferences.isSteeringHotSettingEnabled()) {
+            return super.dispatchKeyEvent(event);
+        }
+
         if (event.getAction() != KeyEvent.ACTION_DOWN) {
             return super.dispatchKeyEvent(event);
         }
@@ -337,6 +341,7 @@ public class MainActivity extends BaseActivity {
         // This is the lateral slide-in drawer
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
+        applyCarUiIconScale();
 
         /*
          * In questo modo intercetto il cambio schermata tramite navbar e se il bottom sheet è aperto,
@@ -358,6 +363,19 @@ public class MainActivity extends BaseActivity {
 
         NavigationUI.setupWithNavController(bottomNavigationView, navController);
         NavigationUI.setupWithNavController(navigationView, navController);
+    }
+
+    private void applyCarUiIconScale() {
+        float iconScale = Preferences.getCarUiIconScale();
+        int baseIconSizePx = Math.round(getResources().getDimension(R.dimen.car_icon_size));
+        int scaledSizePx = Math.max(baseIconSizePx, Math.round(baseIconSizePx * iconScale));
+
+        if (bottomNavigationView != null) {
+            bottomNavigationView.setItemIconSize(scaledSizePx);
+        }
+        if (navigationView != null) {
+            navigationView.setItemIconSize(scaledSizePx);
+        }
     }
 
     public void setBottomNavigationBarVisibility(boolean visibility) {

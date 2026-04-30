@@ -105,6 +105,9 @@ object Preferences {
 
     private const val CAR_UI_MODE = "car_ui_mode"
     private const val CAR_CONNECTION_DETECTED = "car_connection_detected"
+    private const val CAR_UI_FONT_SCALE = "car_ui_font_scale"
+    private const val CAR_UI_ICON_SCALE = "car_ui_icon_scale"
+    private const val STEERING_HOT_SETTING = "steering_hot_setting"
     private const val STEERING_KEY_PLAY_PAUSE = "steering_key_play_pause"
     private const val STEERING_KEY_NEXT = "steering_key_next"
     private const val STEERING_KEY_PREVIOUS = "steering_key_previous"
@@ -847,6 +850,21 @@ object Preferences {
     @JvmStatic
     fun setCarConnectionDetected(detected: Boolean) {
         App.getInstance().preferences.edit().putBoolean(CAR_CONNECTION_DETECTED, detected).apply()
+    }
+
+    @JvmStatic
+    fun getCarUiFontScale(): Float {
+        return App.getInstance().preferences.getString(CAR_UI_FONT_SCALE, "1.00")?.toFloatOrNull() ?: 1.00f
+    }
+
+    @JvmStatic
+    fun getCarUiIconScale(): Float {
+        return App.getInstance().preferences.getString(CAR_UI_ICON_SCALE, "1.00")?.toFloatOrNull() ?: 1.00f
+    }
+
+    @JvmStatic
+    fun isSteeringHotSettingEnabled(): Boolean {
+        return App.getInstance().preferences.getBoolean(STEERING_HOT_SETTING, true)
     }
 
     private fun getSteeringAction(key: String, defaultValue: String): String {

@@ -404,10 +404,14 @@
 	<string name="settings_androidauto_fourth_tab">Fourth tab display</string>
     <string name="settings_car_head_unit">Car Head Unit</string>
     <string name="settings_car_ui_mode">Car UI mode</string>
-    <string name="settings_car_ui_mode_summary">Enable larger fonts, icons and touch targets optimised for car head-unit displays. Also enables reliable hardware media key (steering wheel button) support.</string>
+    <string name="settings_car_ui_mode_summary">Enable car-focused layout and touch targets for head-unit displays.</string>
     <string name="settings_car_detected_status_title">Android Auto connection</string>
     <string name="settings_car_detected_status_connected">Connected</string>
     <string name="settings_car_detected_status_not_connected">Not connected</string>
+    <string name="settings_car_font_size">Car UI font size</string>
+    <string name="settings_car_icon_size">Car UI icon size</string>
+    <string name="settings_steering_hot_setting">Enable steering wheel controls</string>
+    <string name="settings_steering_hot_setting_summary">Turn hardware steering key controls on or off.</string>
     <string name="settings_steering_key_play_pause">Steering key: Play/Pause</string>
     <string name="settings_steering_key_next">Steering key: Next</string>
     <string name="settings_steering_key_previous">Steering key: Previous</string>

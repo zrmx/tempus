@@ -538,6 +538,28 @@
             android:defaultValue="false" />
 
         <ListPreference
+            android:key="car_ui_font_scale"
+            android:title="@string/settings_car_font_size"
+            android:defaultValue="1.00"
+            app:entries="@array/car_font_size_titles"
+            app:entryValues="@array/car_font_size_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            android:key="car_ui_icon_scale"
+            android:title="@string/settings_car_icon_size"
+            android:defaultValue="1.50"
+            app:entries="@array/car_icon_size_titles"
+            app:entryValues="@array/car_icon_size_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <SwitchPreference
+            android:key="steering_hot_setting"
+            android:title="@string/settings_steering_hot_setting"
+            android:summary="@string/settings_steering_hot_setting_summary"
+            android:defaultValue="true" />
+
+        <ListPreference
             android:key="steering_key_play_pause"
             android:title="@string/settings_steering_key_play_pause"
             android:defaultValue="toggle_play_pause"

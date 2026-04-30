@@ -161,6 +161,8 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         actionAutoDownloadLyrics();
         actionMiniPlayerHeart();
         updateCarConnectionStatus();
+        actionCarUiSizing();
+        actionSteeringHotSetting();
 
         bindMediaService();
         actionAppEqualizer();
@@ -534,6 +536,55 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                         ? R.string.settings_car_detected_status_connected
                         : R.string.settings_car_detected_status_not_connected
         );
+    }
+
+    private void actionCarUiSizing() {
+        ListPreference fontScalePreference = findPreference("car_ui_font_scale");
+        ListPreference iconScalePreference = findPreference("car_ui_icon_scale");
+        if (fontScalePreference != null) {
+            fontScalePreference.setOnPreferenceChangeListener((preference, newValue) -> {
+                activity.recreate();
+                return true;
+            });
+        }
+        if (iconScalePreference != null) {
+            iconScalePreference.setOnPreferenceChangeListener((preference, newValue) -> {
+                activity.recreate();
+                return true;
+            });
+        }
+    }
+
+    private void actionSteeringHotSetting() {
+        SwitchPreference steeringSwitch = findPreference("steering_hot_setting");
+        if (steeringSwitch == null) {
+            return;
+        }
+
+        updateSteeringMappingsEnabled(steeringSwitch.isChecked());
+        steeringSwitch.setOnPreferenceChangeListener((preference, newValue) -> {
+            if (newValue instanceof Boolean) {
+                updateSteeringMappingsEnabled((Boolean) newValue);
+            }
+            return true;
+        });
+    }
+
+    private void updateSteeringMappingsEnabled(boolean enabled) {
+        String[] mappingKeys = {
+                "steering_key_play_pause",
+                "steering_key_next",
+                "steering_key_previous",
+                "steering_key_headsethook",
+                "steering_key_dpad_center"
+        };
+
+        for (String key : mappingKeys) {
+            Preference preference = findPreference(key);
+            if (preference != null) {
+                preference.setEnabled(enabled);
+            }
+        }
     }
 
     private void getScanStatus() {
