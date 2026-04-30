@@ -52,6 +52,7 @@ import com.cappielloantonio.tempo.viewmodel.MainViewModel;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.color.DynamicColors;
+import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -354,6 +355,7 @@ public class MainActivity extends BaseActivity {
         // This is the lateral slide-in drawer
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
+        applyBottomNavigationLabelMode();
         applyCarUiIconScale();
 
         /*
@@ -376,6 +378,19 @@ public class MainActivity extends BaseActivity {
 
         NavigationUI.setupWithNavController(bottomNavigationView, navController);
         NavigationUI.setupWithNavController(navigationView, navController);
+    }
+
+    private void applyBottomNavigationLabelMode() {
+        if (bottomNavigationView == null) {
+            return;
+        }
+        float layoutScale = Preferences.getCarUiLayoutScale();
+        float fontScale = Preferences.getCarUiFontScale();
+        if (layoutScale > 1.0f || fontScale > 1.0f) {
+            bottomNavigationView.setLabelVisibilityMode(NavigationBarView.LABEL_VISIBILITY_SELECTED);
+        } else {
+            bottomNavigationView.setLabelVisibilityMode(NavigationBarView.LABEL_VISIBILITY_LABELED);
+        }
     }
 
     private void applyCarUiIconScale() {

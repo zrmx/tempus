@@ -110,6 +110,10 @@ public class LoginFragment extends Fragment implements ClickCallback {
             dialog.show(activity.getSupportFragmentManager(), null);
             return true;
         }
+        if (item.getItemId() == R.id.action_settings) {
+            activity.navController.navigate(R.id.settingsFragment);
+            return true;
+        }
 
         return false;
     }

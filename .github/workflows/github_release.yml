@@ -40,93 +40,49 @@ jobs:
           echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
           echo Last build tool version is: $BUILD_TOOL_VERSION
 
-      - name: Build All Release APKs
+      - name: Build Degoogled Arm64 Release APK
         id: build
         if: github.event_name == 'push' || github.event_name == 'pull_request'
         run: |
-          # Build release variants for tagged pushes and PR validation.
-          bash ./gradlew assembleTempusRelease
-          bash ./gradlew assembleDegoogledRelease
-
-      - name: Build All Debug APKs
-        id: build_debug
-        if: github.event_name == 'pull_request'
-        run: |
-          # Debug APKs are signed with the default debug keystore and are installable from CI artifacts.
-          bash ./gradlew assembleTempusDebug
-          bash ./gradlew assembleDegoogledDebug
+          # Build only the degoogled arm64 release variant.
+          bash ./gradlew assembleDegoogledRelease -PciArm64Only=true
 
       - name: Create Artifact Staging Directory
         if: github.event_name == 'push'
         run: mkdir -p release-artifacts
 
-      - name: Sign Tempus Release APKs
-        id: sign_tempus_release
+      - name: Sign Degoogled Arm64 Release APK
         if: github.event_name == 'push'
-        uses: r0adkll/sign-android-release@v1
-        with:
-          releaseDirectory: app/build/outputs/apk/tempus/release
-          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
-          alias: ${{ secrets.KEY_ALIAS_GITHUB }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD_GITHUB }}
-        env:
-          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
-
-      - name: Prepare Signed Tempus APKs for Release
-        if: github.event_name == 'push'
+        shell: bash
         run: |
-          TEMPUS_PATH=app/build/outputs/apk/tempus/release
-          
-          echo "--- Tempus Files BEFORE Move ---"
-          ls -la $TEMPUS_PATH
-          echo "--------------------------------"
-          
-          # FIX: Use find/xargs for robust file matching and moving.
-          
-          # Renaming 64-bit APK and moving to safe staging directory
-          find $TEMPUS_PATH -name '*arm64-v8a*signed.apk' -print0 | xargs -0 mv -t ./release-artifacts/
-          mv ./release-artifacts/*arm64-v8a*signed.apk ./release-artifacts/app-tempus-arm64-v8a-release.apk
-          
-          # Renaming 32-bit APK and moving to safe staging directory
-          find $TEMPUS_PATH -name '*armeabi-v7a*signed.apk' -print0 | xargs -0 mv -t ./release-artifacts/
-          mv ./release-artifacts/*armeabi-v7a*signed.apk ./release-artifacts/app-tempus-armeabi-v7a-release.apk
-          
-          echo "Prepared Tempus APKs."
+          APK_PATH="$(find app/build/outputs -name '*degoogled*arm64-v8a*release*unsigned.apk' | head -n 1)"
+          if [ -z "$APK_PATH" ]; then
+            APK_PATH="$(find app/build/outputs -name '*degoogled*release*unsigned.apk' | head -n 1)"
+          fi
+          if [ -z "$APK_PATH" ]; then
+            echo "Could not find degoogled release unsigned APK under app/build/outputs"
+            find app/build/outputs -maxdepth 5 -type f | sort || true
+            exit 1
+          fi
 
-      - name: Sign Degoogled Release APKs
-        id: sign_degoogled_release
-        if: github.event_name == 'push'
-        uses: r0adkll/sign-android-release@v1
-        with:
-          releaseDirectory: app/build/outputs/apk/degoogled/release
-          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
-          alias: ${{ secrets.KEY_ALIAS_GITHUB }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD_GITHUB }}
-        env:
-          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > release-signing-key.jks
 
-      - name: Prepare Signed Degoogled APKs for Release
-        if: github.event_name == 'push'
-        run: |
-          DEGOOGLED_PATH=app/build/outputs/apk/degoogled/release
-          
-          echo "--- Degoogled Files BEFORE Move ---"
-          ls -la $DEGOOGLED_PATH
-          echo "--------------------------------"
-          
-          # FIX: Use find/xargs for robust file matching and moving.
-          
-          # Renaming 64-bit APK and moving to safe staging directory
-          find $DEGOOGLED_PATH -name '*arm64-v8a*signed.apk' -print0 | xargs -0 mv -t ./release-artifacts/
-          mv ./release-artifacts/*arm64-v8a*signed.apk ./release-artifacts/app-degoogled-arm64-v8a-release.apk
-          
-          # Renaming 32-bit APK and moving to safe staging directory
-          find $DEGOOGLED_PATH -name '*armeabi-v7a*signed.apk' -print0 | xargs -0 mv -t ./release-artifacts/
-          mv ./release-artifacts/*armeabi-v7a*signed.apk ./release-artifacts/app-degoogled-armeabi-v7a-release.apk
-          
-          echo "Prepared Degoogled APKs."
+          APKSIGNER="${ANDROID_HOME}/build-tools/${BUILD_TOOL_VERSION}/apksigner"
+          if [ ! -x "$APKSIGNER" ]; then
+            APKSIGNER="/usr/local/lib/android/sdk/build-tools/${BUILD_TOOL_VERSION}/apksigner"
+          fi
+
+          "$APKSIGNER" sign \
+            --ks release-signing-key.jks \
+            --ks-key-alias "${{ secrets.KEY_ALIAS_GITHUB }}" \
+            --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
+            --key-pass pass:${{ secrets.KEY_PASSWORD_GITHUB }} \
+            --out ./release-artifacts/app-degoogled-arm64-v8a-release.apk \
+            "$APK_PATH"
+
+          "$APKSIGNER" verify ./release-artifacts/app-degoogled-arm64-v8a-release.apk
+
+          echo "Prepared Degoogled arm64 APK."
           ls -la ./release-artifacts/
 
       - name: Create Release
@@ -141,25 +97,15 @@ jobs:
           prerelease: false
           files: ./release-artifacts/*.apk
 
-      - name: Upload Release APKs as artifacts (For easy pipeline access)
+      - name: Upload Release APK as artifact
         if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
-          name: release-apks
-          path: ./release-artifacts/*.apk
+          name: degoogled-arm64-release-apk
+          path: ./release-artifacts/app-degoogled-arm64-v8a-release.apk
           retention-days: 30
 
-      - name: Upload PR Debug APKs as artifacts
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
-        with:
-          name: pr-apks-debug
-          path: |
-            app/build/outputs/apk/tempus/debug/*.apk
-            app/build/outputs/apk/degoogled/debug/*.apk
-          retention-days: 14
-
-      - name: Sign PR Release APKs (debug key)
+      - name: Sign PR Degoogled Arm64 Release APK (debug key)
         if: github.event_name == 'pull_request'
         shell: bash
         run: |
@@ -180,22 +126,28 @@ jobs:
             APKSIGNER="/usr/local/lib/android/sdk/build-tools/${BUILD_TOOL_VERSION}/apksigner"
           fi
 
-          find app/build/outputs/apk -path '*/release/*-unsigned.apk' -print0 | while IFS= read -r -d '' apk; do
-            signed_name="$(basename "$apk" | sed 's/-unsigned\.apk$/.apk/')"
-            "$APKSIGNER" sign \
-              --ks pr-debug.keystore \
-              --ks-key-alias androiddebugkey \
-              --ks-pass pass:android \
-              --key-pass pass:android \
-              --out "pr-release-artifacts/${signed_name}" \
-              "$apk"
-            "$APKSIGNER" verify "pr-release-artifacts/${signed_name}"
-          done
+          APK_PATH="$(find app/build/outputs -name '*degoogled*arm64-v8a*release*unsigned.apk' | head -n 1)"
+          if [ -z "$APK_PATH" ]; then
+            APK_PATH="$(find app/build/outputs -name '*degoogled*release*unsigned.apk' | head -n 1)"
+          fi
+          if [ -z "$APK_PATH" ]; then
+            echo "Could not find degoogled release unsigned APK under app/build/outputs"
+            find app/build/outputs -maxdepth 5 -type f | sort || true
+            exit 1
+          fi
+          "$APKSIGNER" sign \
+            --ks pr-debug.keystore \
+            --ks-key-alias androiddebugkey \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --out pr-release-artifacts/app-degoogled-arm64-v8a-release.apk \
+            "$APK_PATH"
+          "$APKSIGNER" verify pr-release-artifacts/app-degoogled-arm64-v8a-release.apk
 
-      - name: Upload PR Release APKs as artifacts
+      - name: Upload PR Release APK as artifact
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: pr-apks-release
-          path: pr-release-artifacts/*.apk
+          name: pr-degoogled-arm64-release-apk
+          path: pr-release-artifacts/app-degoogled-arm64-v8a-release.apk
           retention-days: 14
