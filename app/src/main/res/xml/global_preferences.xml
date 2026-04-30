@@ -548,7 +548,7 @@
         <ListPreference
             android:key="car_ui_icon_scale"
             android:title="@string/settings_car_icon_size"
-            android:defaultValue="1.50"
+            android:defaultValue="1.00"
             app:entries="@array/car_icon_size_titles"
             app:entryValues="@array/car_icon_size_values"
             app:useSimpleSummaryProvider="true" />
@@ -559,45 +559,30 @@
             android:summary="@string/settings_steering_hot_setting_summary"
             android:defaultValue="true" />
 
-        <ListPreference
+        <Preference
             android:key="steering_key_play_pause"
             android:title="@string/settings_steering_key_play_pause"
-            android:defaultValue="toggle_play_pause"
-            app:entries="@array/steering_action_titles"
-            app:entryValues="@array/steering_action_values"
-            app:useSimpleSummaryProvider="true" />
+            android:summary="@string/settings_steering_capture_waiting" />
 
-        <ListPreference
+        <Preference
             android:key="steering_key_next"
             android:title="@string/settings_steering_key_next"
-            android:defaultValue="next"
-            app:entries="@array/steering_action_titles"
-            app:entryValues="@array/steering_action_values"
-            app:useSimpleSummaryProvider="true" />
+            android:summary="@string/settings_steering_capture_waiting" />
 
-        <ListPreference
+        <Preference
             android:key="steering_key_previous"
             android:title="@string/settings_steering_key_previous"
-            android:defaultValue="previous"
-            app:entries="@array/steering_action_titles"
-            app:entryValues="@array/steering_action_values"
-            app:useSimpleSummaryProvider="true" />
+            android:summary="@string/settings_steering_capture_waiting" />
 
-        <ListPreference
+        <Preference
             android:key="steering_key_headsethook"
             android:title="@string/settings_steering_key_headsethook"
-            android:defaultValue="toggle_play_pause"
-            app:entries="@array/steering_action_titles"
-            app:entryValues="@array/steering_action_values"
-            app:useSimpleSummaryProvider="true" />
+            android:summary="@string/settings_steering_capture_waiting" />
 
-        <ListPreference
+        <Preference
             android:key="steering_key_dpad_center"
             android:title="@string/settings_steering_key_dpad_center"
-            android:defaultValue="toggle_play_pause"
-            app:entries="@array/steering_action_titles"
-            app:entryValues="@array/steering_action_values"
-            app:useSimpleSummaryProvider="true" />
+            android:summary="@string/settings_steering_capture_waiting" />
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/settings_about_title">

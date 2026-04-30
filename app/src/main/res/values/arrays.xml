@@ -337,28 +337,48 @@
     </string-array>
 
     <string-array name="car_font_size_titles">
-        <item>Small (90%)</item>
-        <item>Normal (100%)</item>
-        <item>Large (115%)</item>
-        <item>Extra large (130%)</item>
+        <item>100%</item>
+        <item>200%</item>
+        <item>300%</item>
+        <item>400%</item>
+        <item>500%</item>
+        <item>600%</item>
+        <item>700%</item>
+        <item>800%</item>
+        <item>900%</item>
     </string-array>
     <string-array name="car_font_size_values">
-        <item>0.90</item>
         <item>1.00</item>
-        <item>1.15</item>
-        <item>1.30</item>
+        <item>2.00</item>
+        <item>3.00</item>
+        <item>4.00</item>
+        <item>5.00</item>
+        <item>6.00</item>
+        <item>7.00</item>
+        <item>8.00</item>
+        <item>9.00</item>
     </string-array>
     <string-array name="car_icon_size_titles">
-        <item>Normal (100%)</item>
-        <item>Large (125%)</item>
-        <item>Extra large (150%)</item>
-        <item>Maximum (175%)</item>
+        <item>100%</item>
+        <item>200%</item>
+        <item>300%</item>
+        <item>400%</item>
+        <item>500%</item>
+        <item>600%</item>
+        <item>700%</item>
+        <item>800%</item>
+        <item>900%</item>
     </string-array>
     <string-array name="car_icon_size_values">
         <item>1.00</item>
-        <item>1.25</item>
-        <item>1.50</item>
-        <item>1.75</item>
+        <item>2.00</item>
+        <item>3.00</item>
+        <item>4.00</item>
+        <item>5.00</item>
+        <item>6.00</item>
+        <item>7.00</item>
+        <item>8.00</item>
+        <item>9.00</item>
     </string-array>
 	<!-- end Add by MFO -->
 	

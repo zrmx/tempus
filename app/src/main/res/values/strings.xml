@@ -412,6 +412,10 @@
     <string name="settings_car_icon_size">Car UI icon size</string>
     <string name="settings_steering_hot_setting">Enable steering wheel controls</string>
     <string name="settings_steering_hot_setting_summary">Turn hardware steering key controls on or off.</string>
+    <string name="settings_steering_capture_title">Press a steering key</string>
+    <string name="settings_steering_capture_message">After tapping OK, press the steering wheel button you want to assign.</string>
+    <string name="settings_steering_capture_waiting">Tap to capture key</string>
+    <string name="settings_steering_capture_saved">Assigned key: %1$s</string>
     <string name="settings_steering_key_play_pause">Steering key: Play/Pause</string>
     <string name="settings_steering_key_next">Steering key: Next</string>
     <string name="settings_steering_key_previous">Steering key: Previous</string>

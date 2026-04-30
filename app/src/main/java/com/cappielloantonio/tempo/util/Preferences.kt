@@ -108,6 +108,7 @@ object Preferences {
     private const val CAR_UI_FONT_SCALE = "car_ui_font_scale"
     private const val CAR_UI_ICON_SCALE = "car_ui_icon_scale"
     private const val STEERING_HOT_SETTING = "steering_hot_setting"
+    private const val STEERING_CAPTURE_TARGET = "steering_capture_target"
     private const val STEERING_KEY_PLAY_PAUSE = "steering_key_play_pause"
     private const val STEERING_KEY_NEXT = "steering_key_next"
     private const val STEERING_KEY_PREVIOUS = "steering_key_previous"
@@ -867,20 +868,71 @@ object Preferences {
         return App.getInstance().preferences.getBoolean(STEERING_HOT_SETTING, true)
     }
 
-    private fun getSteeringAction(key: String, defaultValue: String): String {
-        return App.getInstance().preferences.getString(key, defaultValue) ?: defaultValue
+    @JvmStatic
+    fun getSteeringCaptureTarget(): String? {
+        return App.getInstance().preferences.getString(STEERING_CAPTURE_TARGET, null)
+    }
+
+    @JvmStatic
+    fun setSteeringCaptureTarget(key: String?) {
+        App.getInstance().preferences.edit().putString(STEERING_CAPTURE_TARGET, key).apply()
+    }
+
+    @JvmStatic
+    fun clearSteeringCaptureTarget() {
+        App.getInstance().preferences.edit().remove(STEERING_CAPTURE_TARGET).apply()
+    }
+
+    @JvmStatic
+    fun setSteeringKeyCodeForPreference(preferenceKey: String, keyCode: Int) {
+        App.getInstance().preferences.edit().putInt(preferenceKey, keyCode).apply()
+    }
+
+    private fun getSteeringDefaultKeyCode(preferenceKey: String): Int {
+        return when (preferenceKey) {
+            STEERING_KEY_PLAY_PAUSE -> KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
+            STEERING_KEY_NEXT -> KeyEvent.KEYCODE_MEDIA_NEXT
+            STEERING_KEY_PREVIOUS -> KeyEvent.KEYCODE_MEDIA_PREVIOUS
+            STEERING_KEY_HEADSETHOOK -> KeyEvent.KEYCODE_HEADSETHOOK
+            STEERING_KEY_DPAD_CENTER -> KeyEvent.KEYCODE_DPAD_CENTER
+            else -> KeyEvent.KEYCODE_UNKNOWN
+        }
+    }
+
+    @JvmStatic
+    fun getSteeringKeyCodeForPreference(preferenceKey: String): Int {
+        val defaultValue = getSteeringDefaultKeyCode(preferenceKey)
+        val prefs = App.getInstance().preferences
+        val storedValue = prefs.all[preferenceKey]
+
+        return when (storedValue) {
+            is Int -> storedValue
+            is String -> storedValue.toIntOrNull() ?: defaultValue
+            else -> defaultValue
+        }
     }
 
     @JvmStatic
     fun getSteeringActionForKeyCode(keyCode: Int): String {
+        if (keyCode == getSteeringKeyCodeForPreference(STEERING_KEY_PLAY_PAUSE)) {
+            return STEERING_ACTION_TOGGLE_PLAY_PAUSE
+        }
+        if (keyCode == getSteeringKeyCodeForPreference(STEERING_KEY_NEXT)) {
+            return STEERING_ACTION_NEXT
+        }
+        if (keyCode == getSteeringKeyCodeForPreference(STEERING_KEY_PREVIOUS)) {
+            return STEERING_ACTION_PREVIOUS
+        }
+        if (keyCode == getSteeringKeyCodeForPreference(STEERING_KEY_HEADSETHOOK)) {
+            return STEERING_ACTION_TOGGLE_PLAY_PAUSE
+        }
+        if (keyCode == getSteeringKeyCodeForPreference(STEERING_KEY_DPAD_CENTER) || keyCode == KeyEvent.KEYCODE_ENTER) {
+            return STEERING_ACTION_TOGGLE_PLAY_PAUSE
+        }
+
         return when (keyCode) {
             KeyEvent.KEYCODE_MEDIA_PLAY -> STEERING_ACTION_PLAY
             KeyEvent.KEYCODE_MEDIA_PAUSE -> STEERING_ACTION_PAUSE
-            KeyEvent.KEYCODE_MEDIA_NEXT -> getSteeringAction(STEERING_KEY_NEXT, STEERING_ACTION_NEXT)
-            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> getSteeringAction(STEERING_KEY_PREVIOUS, STEERING_ACTION_PREVIOUS)
-            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> getSteeringAction(STEERING_KEY_PLAY_PAUSE, STEERING_ACTION_TOGGLE_PLAY_PAUSE)
-            KeyEvent.KEYCODE_HEADSETHOOK -> getSteeringAction(STEERING_KEY_HEADSETHOOK, STEERING_ACTION_TOGGLE_PLAY_PAUSE)
-            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> getSteeringAction(STEERING_KEY_DPAD_CENTER, STEERING_ACTION_TOGGLE_PLAY_PAUSE)
             else -> STEERING_ACTION_NONE
         }
     }

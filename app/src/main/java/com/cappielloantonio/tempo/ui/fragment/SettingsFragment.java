@@ -12,6 +12,7 @@ import android.os.IBinder;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.view.LayoutInflater;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -22,6 +23,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.os.LocaleListCompat;
 import androidx.lifecycle.ViewModelProvider;
@@ -163,6 +165,8 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         updateCarConnectionStatus();
         actionCarUiSizing();
         actionSteeringHotSetting();
+        actionSteeringKeyCapture();
+        updateSteeringCaptureSummaries();
 
         bindMediaService();
         actionAppEqualizer();
@@ -570,6 +574,27 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         });
     }
 
+    private void actionSteeringKeyCapture() {
+        String[] mappingKeys = {
+                "steering_key_play_pause",
+                "steering_key_next",
+                "steering_key_previous",
+                "steering_key_headsethook",
+                "steering_key_dpad_center"
+        };
+
+        for (String key : mappingKeys) {
+            Preference preference = findPreference(key);
+            if (preference == null) {
+                continue;
+            }
+            preference.setOnPreferenceClickListener(pref -> {
+                openSteeringCaptureDialog(key);
+                return true;
+            });
+        }
+    }
+
     private void updateSteeringMappingsEnabled(boolean enabled) {
         String[] mappingKeys = {
                 "steering_key_play_pause",
@@ -585,6 +610,55 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 preference.setEnabled(enabled);
             }
         }
+    }
+
+    private void updateSteeringCaptureSummaries() {
+        String[] mappingKeys = {
+                "steering_key_play_pause",
+                "steering_key_next",
+                "steering_key_previous",
+                "steering_key_headsethook",
+                "steering_key_dpad_center"
+        };
+
+        for (String key : mappingKeys) {
+            updateSteeringCaptureSummary(key);
+        }
+    }
+
+    private void updateSteeringCaptureSummary(@NonNull String key) {
+        Preference preference = findPreference(key);
+        if (preference == null) {
+            return;
+        }
+
+        int keyCode = Preferences.getSteeringKeyCodeForPreference(key);
+        String keyName = KeyEvent.keyCodeToString(keyCode);
+        preference.setSummary(getString(R.string.settings_steering_capture_saved, keyName));
+    }
+
+    private void openSteeringCaptureDialog(@NonNull String targetPreferenceKey) {
+        Preferences.setSteeringCaptureTarget(targetPreferenceKey);
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.settings_steering_capture_title)
+                .setMessage(R.string.settings_steering_capture_message)
+                .setNegativeButton(android.R.string.cancel, (dialogInterface, which) -> Preferences.clearSteeringCaptureTarget())
+                .setOnCancelListener(dialogInterface -> Preferences.clearSteeringCaptureTarget())
+                .create();
+
+        dialog.setOnKeyListener((dialogInterface, keyCode, event) -> {
+            if (event.getAction() != KeyEvent.ACTION_DOWN) {
+                return true;
+            }
+            Preferences.setSteeringKeyCodeForPreference(targetPreferenceKey, keyCode);
+            Preferences.clearSteeringCaptureTarget();
+            updateSteeringCaptureSummary(targetPreferenceKey);
+            Toast.makeText(requireContext(), getString(R.string.settings_steering_capture_saved, KeyEvent.keyCodeToString(keyCode)), Toast.LENGTH_SHORT).show();
+            dialogInterface.dismiss();
+            return true;
+        });
+
+        dialog.show();
     }
 
     private void getScanStatus() {

@@ -170,6 +170,10 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        if (Preferences.getSteeringCaptureTarget() != null) {
+            return super.dispatchKeyEvent(event);
+        }
+
         if (!Preferences.isSteeringHotSettingEnabled()) {
             return super.dispatchKeyEvent(event);
         }
