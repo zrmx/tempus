@@ -8,4 +8,12 @@
     <dimen name="radius">2dp</dimen>
     <dimen name="dots_height">2dp</dimen>
     <dimen name="downloaded_item_padding">12dp</dimen>
+
+    <!-- Car UI mode: base token sizes (overridden in values-car/) -->
+    <dimen name="car_list_item_height">56dp</dimen>
+    <dimen name="car_icon_size">24dp</dimen>
+    <dimen name="car_text_size_primary">16sp</dimen>
+    <dimen name="car_text_size_secondary">14sp</dimen>
+    <dimen name="car_touch_target_min">48dp</dimen>
+    <dimen name="car_bottom_sheet_peek_height">56dp</dimen>
 </resources>

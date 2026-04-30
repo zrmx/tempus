@@ -375,9 +375,8 @@ public class PlayerControllerFragment extends Fragment {
         String artistId = mediaMetadata.extras != null ? mediaMetadata.extras.getString("artistId") : null;
 
         AssetLinkUtil.AssetLink songLink = bindAssetLinkChip(playerSongLinkChip, AssetLinkUtil.TYPE_SONG, songId);
-        AssetLinkUtil.AssetLink albumLink = bindAssetLinkChip(playerAlbumLinkChip, AssetLinkUtil.TYPE_ALBUM, albumId);
+        bindAssetLinkChip(playerAlbumLinkChip, AssetLinkUtil.TYPE_ALBUM, albumId);
         AssetLinkUtil.AssetLink artistLink = bindAssetLinkChip(playerArtistLinkChip, AssetLinkUtil.TYPE_ARTIST, artistId);
-        bindAssetLinkView(playerMediaTitleLabel, songLink);
         bindAssetLinkView(playerArtistNameLabel, artistLink != null ? artistLink : songLink);
         bindAssetLinkView(playerMediaCoverViewPager, songLink);
         syncAssetLinkGroupVisibility();
@@ -582,16 +581,7 @@ public class PlayerControllerFragment extends Fragment {
     }
 
     private void initMediaLabelButton() {
-        playerBottomSheetViewModel.getLiveAlbum().observe(getViewLifecycleOwner(), album -> {
-            if (album != null) {
-                playerMediaTitleLabel.setOnClickListener(view -> {
-                    Bundle bundle = new Bundle();
-                    bundle.putParcelable(Constants.ALBUM_OBJECT, album);
-                    NavHostFragment.findNavController(this).navigate(R.id.albumPageFragment, bundle);
-                    activity.collapseBottomSheetDelayed();
-                });
-            }
-        });
+        playerMediaTitleLabel.setOnClickListener(view -> goToLyricsPage());
     }
 
     private void initArtistLabelButton() {

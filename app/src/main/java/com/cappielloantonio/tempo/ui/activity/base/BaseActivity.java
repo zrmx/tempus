@@ -2,6 +2,9 @@ package com.cappielloantonio.tempo.ui.activity.base;
 
 import android.Manifest;
 import android.content.ComponentName;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,6 +19,7 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.offline.DownloadService;
 import androidx.media3.session.MediaBrowser;
 import androidx.media3.session.SessionToken;
+import androidx.preference.PreferenceManager;
 
 import com.cappielloantonio.tempo.service.DownloaderService;
 import com.cappielloantonio.tempo.service.MediaService;
@@ -28,8 +32,38 @@ import com.google.common.util.concurrent.ListenableFuture;
 @UnstableApi
 public class BaseActivity extends AppCompatActivity {
     private static final String TAG = "BaseActivity";
+    private static final String CAR_UI_FONT_SCALE_KEY = "car_ui_font_scale";
 
     private ListenableFuture<MediaBrowser> mediaBrowserListenableFuture;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(newBase);
+        float fontScale = 1.0f;
+        float layoutScale = 1.0f;
+        try {
+            String configuredScale = sharedPreferences.getString(CAR_UI_FONT_SCALE_KEY, "1.00");
+            fontScale = configuredScale != null ? Float.parseFloat(configuredScale) : 1.0f;
+        } catch (NumberFormatException ignored) {
+            fontScale = 1.0f;
+        }
+        try {
+            String configuredScale = sharedPreferences.getString("car_ui_layout_scale", "1.00");
+            layoutScale = configuredScale != null ? Float.parseFloat(configuredScale) : 1.0f;
+        } catch (NumberFormatException ignored) {
+            layoutScale = 1.0f;
+        }
+
+        fontScale = Math.max(1.0f, Math.min(9.0f, fontScale));
+        layoutScale = Math.max(1.0f, Math.min(9.0f, layoutScale));
+
+        Configuration configuration = new Configuration(newBase.getResources().getConfiguration());
+        configuration.fontScale = fontScale;
+        int baseDensityDpi = newBase.getResources().getConfiguration().densityDpi;
+        configuration.densityDpi = Math.round(baseDensityDpi * layoutScale);
+        Context context = newBase.createConfigurationContext(configuration);
+        super.attachBaseContext(context);
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

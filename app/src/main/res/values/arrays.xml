@@ -318,6 +318,68 @@
         <item>14</item>
         <item>15</item>
     </string-array>
+
+    <string-array name="steering_action_titles">
+        <item>Do nothing</item>
+        <item>Toggle play/pause</item>
+        <item>Play</item>
+        <item>Pause</item>
+        <item>Next track</item>
+        <item>Previous track</item>
+    </string-array>
+    <string-array name="steering_action_values">
+        <item>none</item>
+        <item>toggle_play_pause</item>
+        <item>play</item>
+        <item>pause</item>
+        <item>next</item>
+        <item>previous</item>
+    </string-array>
+
+    <string-array name="car_font_size_titles">
+        <item>100%</item>
+        <item>200%</item>
+        <item>300%</item>
+        <item>400%</item>
+        <item>500%</item>
+        <item>600%</item>
+        <item>700%</item>
+        <item>800%</item>
+        <item>900%</item>
+    </string-array>
+    <string-array name="car_font_size_values">
+        <item>1.00</item>
+        <item>2.00</item>
+        <item>3.00</item>
+        <item>4.00</item>
+        <item>5.00</item>
+        <item>6.00</item>
+        <item>7.00</item>
+        <item>8.00</item>
+        <item>9.00</item>
+    </string-array>
+    <string-array name="car_icon_size_titles">
+        <item>100%</item>
+        <item>200%</item>
+        <item>300%</item>
+        <item>400%</item>
+        <item>500%</item>
+        <item>600%</item>
+        <item>700%</item>
+        <item>800%</item>
+        <item>900%</item>
+    </string-array>
+    <string-array name="car_icon_size_values">
+        <item>1.00</item>
+        <item>2.00</item>
+        <item>3.00</item>
+        <item>4.00</item>
+        <item>5.00</item>
+        <item>6.00</item>
+        <item>7.00</item>
+        <item>8.00</item>
+        <item>9.00</item>
+    </string-array>
 	<!-- end Add by MFO -->
 	
 </resources>

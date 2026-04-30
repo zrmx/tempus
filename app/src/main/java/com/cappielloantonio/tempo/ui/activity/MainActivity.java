@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
-import android.graphics.Rect;
-import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -13,6 +11,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 
@@ -53,7 +52,9 @@ import com.cappielloantonio.tempo.viewmodel.MainViewModel;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.color.DynamicColors;
+import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.navigation.NavigationView;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.Objects;
@@ -86,6 +87,10 @@ public class MainActivity extends BaseActivity {
         SplashScreen.installSplashScreen(this);
         DynamicColors.applyToActivityIfAvailable(this);
 
+        if (Preferences.isCarUiModeEnabled() || Preferences.isCarConnectionDetected()) {
+            getTheme().applyStyle(R.style.AppTheme_CarUiMode, true);
+        }
+
         super.onCreate(savedInstanceState);
 
         bind = ActivityMainBinding.inflate(getLayoutInflater());
@@ -98,7 +103,7 @@ public class MainActivity extends BaseActivity {
         connectivityStatusBroadcastReceiver = new ConnectivityStatusBroadcastReceiver(this);
         connectivityStatusReceiverManager(true);
 
-        isLandscape = (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
+        updateLandscapeMode(getResources().getConfiguration());
 
         init();
         checkConnectionType();
@@ -120,7 +125,25 @@ public class MainActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         pingServer();
-        toggleNavigationDrawerLockOnOrientationChange();
+        handleWindowModeChange(getResources().getConfiguration());
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        handleWindowModeChange(newConfig);
+    }
+
+    @Override
+    public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
+        super.onMultiWindowModeChanged(isInMultiWindowMode);
+        handleWindowModeChange(getResources().getConfiguration());
+    }
+
+    @Override
+    public void onMultiWindowModeChanged(boolean isInMultiWindowMode, @NonNull Configuration newConfig) {
+        super.onMultiWindowModeChanged(isInMultiWindowMode, newConfig);
+        handleWindowModeChange(newConfig);
     }
 
     @Override
@@ -144,6 +167,69 @@ public class MainActivity extends BaseActivity {
             collapseBottomSheetDelayed();
         else
             super.onBackPressed();
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        String steeringCaptureTarget = Preferences.getSteeringCaptureTarget();
+        if (steeringCaptureTarget != null) {
+            if (event.getAction() != KeyEvent.ACTION_DOWN) {
+                return true;
+            }
+
+            int keyCode = event.getKeyCode();
+            Preferences.setSteeringKeyCodeForPreference(steeringCaptureTarget, keyCode);
+            Preferences.clearSteeringCaptureTarget();
+            android.widget.Toast.makeText(this, getString(R.string.settings_steering_capture_saved, KeyEvent.keyCodeToString(keyCode)), android.widget.Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
+        if (!Preferences.isSteeringHotSettingEnabled()) {
+            return super.dispatchKeyEvent(event);
+        }
+
+        if (event.getAction() != KeyEvent.ACTION_DOWN) {
+            return super.dispatchKeyEvent(event);
+        }
+        int keyCode = event.getKeyCode();
+        ListenableFuture<androidx.media3.session.MediaBrowser> future = getMediaBrowserListenableFuture();
+        if (future == null || !future.isDone()) {
+            return super.dispatchKeyEvent(event);
+        }
+        androidx.media3.session.MediaBrowser browser;
+        try {
+            browser = future.get();
+        } catch (ExecutionException | InterruptedException e) {
+            android.util.Log.w(TAG, "dispatchKeyEvent: could not get MediaBrowser for key " + keyCode, e);
+            return super.dispatchKeyEvent(event);
+        }
+        if (browser == null) {
+            return super.dispatchKeyEvent(event);
+        }
+        String action = Preferences.getSteeringActionForKeyCode(keyCode);
+        switch (action) {
+            case Preferences.STEERING_ACTION_PLAY:
+                browser.play();
+                return true;
+            case Preferences.STEERING_ACTION_PAUSE:
+                browser.pause();
+                return true;
+            case Preferences.STEERING_ACTION_TOGGLE_PLAY_PAUSE:
+                if (browser.isPlaying()) {
+                    browser.pause();
+                } else {
+                    browser.play();
+                }
+                return true;
+            case Preferences.STEERING_ACTION_NEXT:
+                browser.seekToNextMediaItem();
+                return true;
+            case Preferences.STEERING_ACTION_PREVIOUS:
+                browser.seekToPreviousMediaItem();
+                return true;
+            default:
+                return super.dispatchKeyEvent(event);
+        }
     }
 
     public void init() {
@@ -269,6 +355,8 @@ public class MainActivity extends BaseActivity {
         // This is the lateral slide-in drawer
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
+        applyBottomNavigationLabelMode();
+        applyCarUiIconScale();
 
         /*
          * In questo modo intercetto il cambio schermata tramite navbar e se il bottom sheet è aperto,
@@ -292,6 +380,32 @@ public class MainActivity extends BaseActivity {
         NavigationUI.setupWithNavController(navigationView, navController);
     }
 
+    private void applyBottomNavigationLabelMode() {
+        if (bottomNavigationView == null) {
+            return;
+        }
+        float layoutScale = Preferences.getCarUiLayoutScale();
+        float fontScale = Preferences.getCarUiFontScale();
+        if (layoutScale > 1.0f || fontScale > 1.0f) {
+            bottomNavigationView.setLabelVisibilityMode(NavigationBarView.LABEL_VISIBILITY_SELECTED);
+        } else {
+            bottomNavigationView.setLabelVisibilityMode(NavigationBarView.LABEL_VISIBILITY_LABELED);
+        }
+    }
+
+    private void applyCarUiIconScale() {
+        float iconScale = Preferences.getCarUiIconScale();
+        int baseIconSizePx = Math.round(getResources().getDimension(R.dimen.car_icon_size));
+        int scaledSizePx = Math.max(baseIconSizePx, Math.round(baseIconSizePx * iconScale));
+
+        if (bottomNavigationView != null) {
+            bottomNavigationView.setItemIconSize(scaledSizePx);
+        }
+        if (navigationView != null) {
+            navigationView.setItemIconSize(scaledSizePx);
+        }
+    }
+
     public void setBottomNavigationBarVisibility(boolean visibility) {
         if (visibility) {
             bottomNavigationView.setVisibility(View.VISIBLE);
@@ -303,15 +417,17 @@ public class MainActivity extends BaseActivity {
     }
 
     public void toggleBottomNavigationBarVisibilityOnOrientationChange() {
+        boolean isInSplitScreen = isInMultiWindowMode();
+
         // Ignore orientation change, bottom navbar always hidden
         if (Preferences.getHideBottomNavbarOnPortrait()) {
             setBottomNavigationBarVisibility(false);
             setPortraitPlayerBottomSheetPeekHeight(56);
-            setSystemBarsVisibility(!isLandscape);
+            setSystemBarsVisibility(!isLandscape || isInSplitScreen);
             return;
         }
 
-        if (!isLandscape) {
+        if (!isLandscape || isInSplitScreen) {
             // Show app navbar + show system bars
             setPortraitPlayerBottomSheetPeekHeight(136);
             setBottomNavigationBarVisibility(true);
@@ -345,6 +461,10 @@ public class MainActivity extends BaseActivity {
     }
 
     public void setSystemBarsVisibility(boolean visibility) {
+        if (isInMultiWindowMode()) {
+            visibility = true;
+        }
+
         WindowInsetsControllerCompat insetsController;
         View decorView = getWindow().getDecorView();
         insetsController = new WindowInsetsControllerCompat(getWindow(), decorView);
@@ -361,6 +481,19 @@ public class MainActivity extends BaseActivity {
             insetsController.hide(WindowInsetsCompat.Type.statusBars());
             insetsController.setSystemBarsBehavior(
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        }
+    }
+
+    private void updateLandscapeMode(@NonNull Configuration configuration) {
+        isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE;
+    }
+
+    private void handleWindowModeChange(@NonNull Configuration configuration) {
+        updateLandscapeMode(configuration);
+        toggleNavigationDrawerLockOnOrientationChange();
+
+        if (bottomNavigationView != null && bottomNavigationView.getVisibility() == View.VISIBLE) {
+            toggleBottomNavigationBarVisibilityOnOrientationChange();
         }
     }
 

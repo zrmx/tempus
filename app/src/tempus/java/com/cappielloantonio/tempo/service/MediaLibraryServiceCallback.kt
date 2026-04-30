@@ -46,6 +46,8 @@ open class MediaLibrarySessionCallback(
 ) :
     MediaLibraryService.MediaLibrarySession.Callback {
 
+    private val connectedCarControllers = mutableSetOf<String>()
+
     init {
         // modified by MFO
         MediaBrowserTree.initialize(context, automotiveRepository)
@@ -136,6 +138,12 @@ open class MediaLibrarySessionCallback(
     override fun onConnect(
         session: MediaSession, controller: MediaSession.ControllerInfo
     ): MediaSession.ConnectionResult {
+        val isCarController = session.isAutomotiveController(controller) || session.isAutoCompanionController(controller)
+        if (isCarController) {
+            connectedCarControllers.add("${controller.packageName}:${controller.uid}")
+            Preferences.setCarConnectionDetected(true)
+        }
+
         session.player.addListener(object : Player.Listener {
             override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
                 updateMediaNotificationCustomLayout(session)
@@ -166,6 +174,14 @@ open class MediaLibrarySessionCallback(
         }
 
         return MediaSession.ConnectionResult.AcceptedResultBuilder(session).build()
+    }
+
+    override fun onDisconnected(session: MediaSession, controller: MediaSession.ControllerInfo) {
+        if (session.isAutomotiveController(controller) || session.isAutoCompanionController(controller)) {
+            connectedCarControllers.remove("${controller.packageName}:${controller.uid}")
+            Preferences.setCarConnectionDetected(connectedCarControllers.isNotEmpty())
+        }
+        super.onDisconnected(session, controller)
     }
 
     // Update the mediaNotification after some changes

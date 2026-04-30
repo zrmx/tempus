@@ -7,4 +7,11 @@
         android:iconTint="@color/titleTextColor"
         android:title="@string/menu_add_button"
         app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_settings"
+        android:icon="@drawable/ic_settings"
+        android:iconTint="@color/titleTextColor"
+        android:title="@string/menu_settings_button"
+        app:showAsAction="always" />
 </menu>

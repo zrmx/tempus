@@ -1,6 +1,7 @@
 package com.cappielloantonio.tempo.util
 
 import android.util.Log
+import android.view.KeyEvent
 import androidx.media3.common.Player
 import com.cappielloantonio.tempo.App
 import com.cappielloantonio.tempo.model.HomeSector
@@ -101,6 +102,26 @@ object Preferences {
 	private const val AA_SECOND_TAB = "androidauto_second_tab"
 	private const val AA_THIRD_TAB = "androidauto_third_tab"
 	private const val AA_FOURTH_TAB = "androidauto_fourth_tab"
+
+    private const val CAR_UI_MODE = "car_ui_mode"
+    private const val CAR_CONNECTION_DETECTED = "car_connection_detected"
+    private const val CAR_UI_LAYOUT_SCALE = "car_ui_layout_scale"
+    private const val CAR_UI_FONT_SCALE = "car_ui_font_scale"
+    private const val CAR_UI_ICON_SCALE = "car_ui_icon_scale"
+    private const val STEERING_HOT_SETTING = "steering_hot_setting"
+    private const val STEERING_CAPTURE_TARGET = "steering_capture_target"
+    private const val STEERING_KEY_PLAY_PAUSE = "steering_key_play_pause"
+    private const val STEERING_KEY_NEXT = "steering_key_next"
+    private const val STEERING_KEY_PREVIOUS = "steering_key_previous"
+    private const val STEERING_KEY_HEADSETHOOK = "steering_key_headsethook"
+    private const val STEERING_KEY_DPAD_CENTER = "steering_key_dpad_center"
+
+    const val STEERING_ACTION_NONE = "none"
+    const val STEERING_ACTION_TOGGLE_PLAY_PAUSE = "toggle_play_pause"
+    const val STEERING_ACTION_PLAY = "play"
+    const val STEERING_ACTION_PAUSE = "pause"
+    const val STEERING_ACTION_NEXT = "next"
+    const val STEERING_ACTION_PREVIOUS = "previous"
     
 	@JvmStatic
     fun getServer(): String? {
@@ -812,5 +833,114 @@ object Preferences {
     fun getAndroidAutoFourthTab(): Int {
         return App.getInstance().preferences.getString(AA_FOURTH_TAB, "3")!!.toInt()
     }
-	
+
+    @JvmStatic
+    fun isCarUiModeEnabled(): Boolean {
+        return App.getInstance().preferences.getBoolean(CAR_UI_MODE, false)
+    }
+
+    @JvmStatic
+    fun setCarUiModeEnabled(enabled: Boolean) {
+        App.getInstance().preferences.edit().putBoolean(CAR_UI_MODE, enabled).apply()
+    }
+
+    @JvmStatic
+    fun isCarConnectionDetected(): Boolean {
+        return App.getInstance().preferences.getBoolean(CAR_CONNECTION_DETECTED, false)
+    }
+
+    @JvmStatic
+    fun setCarConnectionDetected(detected: Boolean) {
+        App.getInstance().preferences.edit().putBoolean(CAR_CONNECTION_DETECTED, detected).apply()
+    }
+
+    @JvmStatic
+    fun getCarUiLayoutScale(): Float {
+        return App.getInstance().preferences.getString(CAR_UI_LAYOUT_SCALE, "1.00")?.toFloatOrNull() ?: 1.00f
+    }
+
+    @JvmStatic
+    fun getCarUiFontScale(): Float {
+        return App.getInstance().preferences.getString(CAR_UI_FONT_SCALE, "1.00")?.toFloatOrNull() ?: 1.00f
+    }
+
+    @JvmStatic
+    fun getCarUiIconScale(): Float {
+        return App.getInstance().preferences.getString(CAR_UI_ICON_SCALE, "1.00")?.toFloatOrNull() ?: 1.00f
+    }
+
+    @JvmStatic
+    fun isSteeringHotSettingEnabled(): Boolean {
+        return App.getInstance().preferences.getBoolean(STEERING_HOT_SETTING, true)
+    }
+
+    @JvmStatic
+    fun getSteeringCaptureTarget(): String? {
+        return App.getInstance().preferences.getString(STEERING_CAPTURE_TARGET, null)
+    }
+
+    @JvmStatic
+    fun setSteeringCaptureTarget(key: String?) {
+        App.getInstance().preferences.edit().putString(STEERING_CAPTURE_TARGET, key).apply()
+    }
+
+    @JvmStatic
+    fun clearSteeringCaptureTarget() {
+        App.getInstance().preferences.edit().remove(STEERING_CAPTURE_TARGET).apply()
+    }
+
+    @JvmStatic
+    fun setSteeringKeyCodeForPreference(preferenceKey: String, keyCode: Int) {
+        App.getInstance().preferences.edit().putInt(preferenceKey, keyCode).apply()
+    }
+
+    private fun getSteeringDefaultKeyCode(preferenceKey: String): Int {
+        return when (preferenceKey) {
+            STEERING_KEY_PLAY_PAUSE -> KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
+            STEERING_KEY_NEXT -> KeyEvent.KEYCODE_MEDIA_NEXT
+            STEERING_KEY_PREVIOUS -> KeyEvent.KEYCODE_MEDIA_PREVIOUS
+            STEERING_KEY_HEADSETHOOK -> KeyEvent.KEYCODE_HEADSETHOOK
+            STEERING_KEY_DPAD_CENTER -> KeyEvent.KEYCODE_DPAD_CENTER
+            else -> KeyEvent.KEYCODE_UNKNOWN
+        }
+    }
+
+    @JvmStatic
+    fun getSteeringKeyCodeForPreference(preferenceKey: String): Int {
+        val defaultValue = getSteeringDefaultKeyCode(preferenceKey)
+        val prefs = App.getInstance().preferences
+        val storedValue = prefs.all[preferenceKey]
+
+        return when (storedValue) {
+            is Int -> storedValue
+            is String -> storedValue.toIntOrNull() ?: defaultValue
+            else -> defaultValue
+        }
+    }
+
+    @JvmStatic
+    fun getSteeringActionForKeyCode(keyCode: Int): String {
+        if (keyCode == getSteeringKeyCodeForPreference(STEERING_KEY_PLAY_PAUSE)) {
+            return STEERING_ACTION_TOGGLE_PLAY_PAUSE
+        }
+        if (keyCode == getSteeringKeyCodeForPreference(STEERING_KEY_NEXT)) {
+            return STEERING_ACTION_NEXT
+        }
+        if (keyCode == getSteeringKeyCodeForPreference(STEERING_KEY_PREVIOUS)) {
+            return STEERING_ACTION_PREVIOUS
+        }
+        if (keyCode == getSteeringKeyCodeForPreference(STEERING_KEY_HEADSETHOOK)) {
+            return STEERING_ACTION_TOGGLE_PLAY_PAUSE
+        }
+        if (keyCode == getSteeringKeyCodeForPreference(STEERING_KEY_DPAD_CENTER) || keyCode == KeyEvent.KEYCODE_ENTER) {
+            return STEERING_ACTION_TOGGLE_PLAY_PAUSE
+        }
+
+        return when (keyCode) {
+            KeyEvent.KEYCODE_MEDIA_PLAY -> STEERING_ACTION_PLAY
+            KeyEvent.KEYCODE_MEDIA_PAUSE -> STEERING_ACTION_PAUSE
+            else -> STEERING_ACTION_NONE
+        }
+    }
+
 }

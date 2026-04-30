@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.media.audiofx.AudioEffect;
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.os.IBinder;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.view.LayoutInflater;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -29,6 +31,7 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.preference.PreferenceManager;
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
@@ -71,6 +74,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
     private MediaService.LocalBinder mediaServiceBinder;
     private boolean isServiceBound = false;
+    private SharedPreferences.OnSharedPreferenceChangeListener steeringPreferenceListener;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -160,6 +164,12 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         actionKeepScreenOn();
         actionAutoDownloadLyrics();
         actionMiniPlayerHeart();
+        updateCarConnectionStatus();
+        actionCarUiSizing();
+        actionSteeringHotSetting();
+        actionSteeringKeyCapture();
+        updateSteeringCaptureSummaries();
+        registerSteeringPreferenceListener();
 
         bindMediaService();
         actionAppEqualizer();
@@ -523,6 +533,156 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         });
     }
 
+    private void updateCarConnectionStatus() {
+        Preference carConnectionStatus = findPreference("car_connection_status");
+        if (carConnectionStatus == null) {
+            return;
+        }
+        carConnectionStatus.setSummary(
+                Preferences.isCarConnectionDetected()
+                        ? R.string.settings_car_detected_status_connected
+                        : R.string.settings_car_detected_status_not_connected
+        );
+    }
+
+    private void actionCarUiSizing() {
+        ListPreference layoutScalePreference = findPreference("car_ui_layout_scale");
+        ListPreference fontScalePreference = findPreference("car_ui_font_scale");
+        ListPreference iconScalePreference = findPreference("car_ui_icon_scale");
+        if (layoutScalePreference != null) {
+            layoutScalePreference.setOnPreferenceChangeListener((preference, newValue) -> {
+                activity.recreate();
+                return true;
+            });
+        }
+        if (fontScalePreference != null) {
+            fontScalePreference.setOnPreferenceChangeListener((preference, newValue) -> {
+                activity.recreate();
+                return true;
+            });
+        }
+        if (iconScalePreference != null) {
+            iconScalePreference.setOnPreferenceChangeListener((preference, newValue) -> {
+                activity.recreate();
+                return true;
+            });
+        }
+    }
+
+    private void actionSteeringHotSetting() {
+        SwitchPreference steeringSwitch = findPreference("steering_hot_setting");
+        if (steeringSwitch == null) {
+            return;
+        }
+
+        updateSteeringMappingsEnabled(steeringSwitch.isChecked());
+        steeringSwitch.setOnPreferenceChangeListener((preference, newValue) -> {
+            if (newValue instanceof Boolean) {
+                updateSteeringMappingsEnabled((Boolean) newValue);
+            }
+            return true;
+        });
+    }
+
+    private void actionSteeringKeyCapture() {
+        String[] mappingKeys = {
+                "steering_key_play_pause",
+                "steering_key_next",
+                "steering_key_previous",
+                "steering_key_headsethook",
+                "steering_key_dpad_center"
+        };
+
+        for (String key : mappingKeys) {
+            Preference preference = findPreference(key);
+            if (preference == null) {
+                continue;
+            }
+            preference.setOnPreferenceClickListener(pref -> {
+                Preferences.setSteeringCaptureTarget(key);
+                preference.setSummary(R.string.settings_steering_capture_waiting);
+                Toast.makeText(requireContext(), R.string.settings_steering_capture_waiting, Toast.LENGTH_SHORT).show();
+                return true;
+            });
+        }
+    }
+
+    private void updateSteeringMappingsEnabled(boolean enabled) {
+        String[] mappingKeys = {
+                "steering_key_play_pause",
+                "steering_key_next",
+                "steering_key_previous",
+                "steering_key_headsethook",
+                "steering_key_dpad_center"
+        };
+
+        for (String key : mappingKeys) {
+            Preference preference = findPreference(key);
+            if (preference != null) {
+                preference.setEnabled(enabled);
+            }
+        }
+    }
+
+    private void updateSteeringCaptureSummaries() {
+        String[] mappingKeys = {
+                "steering_key_play_pause",
+                "steering_key_next",
+                "steering_key_previous",
+                "steering_key_headsethook",
+                "steering_key_dpad_center"
+        };
+
+        for (String key : mappingKeys) {
+            updateSteeringCaptureSummary(key);
+        }
+    }
+
+    private void updateSteeringCaptureSummary(@NonNull String key) {
+        Preference preference = findPreference(key);
+        if (preference == null) {
+            return;
+        }
+
+        if (key.equals(Preferences.getSteeringCaptureTarget())) {
+            preference.setSummary(R.string.settings_steering_capture_waiting);
+            return;
+        }
+
+        int keyCode = Preferences.getSteeringKeyCodeForPreference(key);
+        String keyName = KeyEvent.keyCodeToString(keyCode);
+        preference.setSummary(getString(R.string.settings_steering_capture_saved, keyName));
+    }
+
+    private void registerSteeringPreferenceListener() {
+        if (steeringPreferenceListener != null) {
+            return;
+        }
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        steeringPreferenceListener = (sharedPreferences, key) -> {
+            if (key == null) {
+                return;
+            }
+            if (key.startsWith("steering_key_")) {
+                updateSteeringCaptureSummary(key);
+            }
+            if ("steering_hot_setting".equals(key)) {
+                updateSteeringMappingsEnabled(Preferences.isSteeringHotSettingEnabled());
+            }
+        };
+        preferences.registerOnSharedPreferenceChangeListener(steeringPreferenceListener);
+    }
+
+    private void unregisterSteeringPreferenceListener() {
+        if (steeringPreferenceListener == null || !isAdded()) {
+            return;
+        }
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        preferences.unregisterOnSharedPreferenceChangeListener(steeringPreferenceListener);
+        steeringPreferenceListener = null;
+    }
+
     private void getScanStatus() {
         settingViewModel.getScanStatus(new ScanCallback() {
             @Override
@@ -604,6 +764,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     @Override
     public void onPause() {
         super.onPause();
+        unregisterSteeringPreferenceListener();
         if (isServiceBound) {
             requireActivity().unbindService(serviceConnection);
             isServiceBound = false;

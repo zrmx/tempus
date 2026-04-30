@@ -524,6 +524,75 @@
 	</PreferenceCategory>
 	<!-- end Add by MFO -->
 
+    <PreferenceCategory app:title="@string/settings_car_head_unit">
+        <Preference
+            android:key="car_connection_status"
+            android:title="@string/settings_car_detected_status_title"
+            android:summary="@string/settings_car_detected_status_not_connected"
+            app:selectable="false" />
+
+        <SwitchPreference
+            android:key="car_ui_mode"
+            android:title="@string/settings_car_ui_mode"
+            android:summary="@string/settings_car_ui_mode_summary"
+            android:defaultValue="false" />
+
+        <ListPreference
+            android:key="car_ui_layout_scale"
+            android:title="@string/settings_car_layout_scale"
+            android:defaultValue="1.00"
+            app:entries="@array/car_font_size_titles"
+            app:entryValues="@array/car_font_size_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            android:key="car_ui_font_scale"
+            android:title="@string/settings_car_font_size"
+            android:defaultValue="1.00"
+            app:entries="@array/car_font_size_titles"
+            app:entryValues="@array/car_font_size_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            android:key="car_ui_icon_scale"
+            android:title="@string/settings_car_icon_size"
+            android:defaultValue="1.00"
+            app:entries="@array/car_icon_size_titles"
+            app:entryValues="@array/car_icon_size_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <SwitchPreference
+            android:key="steering_hot_setting"
+            android:title="@string/settings_steering_hot_setting"
+            android:summary="@string/settings_steering_hot_setting_summary"
+            android:defaultValue="true" />
+
+        <Preference
+            android:key="steering_key_play_pause"
+            android:title="@string/settings_steering_key_play_pause"
+            android:summary="@string/settings_steering_capture_waiting" />
+
+        <Preference
+            android:key="steering_key_next"
+            android:title="@string/settings_steering_key_next"
+            android:summary="@string/settings_steering_capture_waiting" />
+
+        <Preference
+            android:key="steering_key_previous"
+            android:title="@string/settings_steering_key_previous"
+            android:summary="@string/settings_steering_capture_waiting" />
+
+        <Preference
+            android:key="steering_key_headsethook"
+            android:title="@string/settings_steering_key_headsethook"
+            android:summary="@string/settings_steering_capture_waiting" />
+
+        <Preference
+            android:key="steering_key_dpad_center"
+            android:title="@string/settings_steering_key_dpad_center"
+            android:summary="@string/settings_steering_capture_waiting" />
+    </PreferenceCategory>
+
     <PreferenceCategory app:title="@string/settings_about_title">
         <Preference
             app:selectable="false"

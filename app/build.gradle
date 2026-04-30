@@ -2,6 +2,8 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
 
+def ciArm64Only = project.findProperty("ciArm64Only") == "true"
+
 android {
     compileSdk 35
     buildToolsVersion = '35.0.0'
@@ -30,7 +32,7 @@ android {
             enable true
             reset()
             //noinspection ChromeOsAbiSupport
-            include 'armeabi-v7a', 'arm64-v8a'
+            include(*(ciArm64Only ? ['arm64-v8a'] : ['armeabi-v7a', 'arm64-v8a']))
             universalApk false
         }
     }

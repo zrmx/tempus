@@ -1,6 +1,31 @@
 # Changelog
 
 ## What's Changed
+## [4.12.6-car] Car Head Unit support (non-Android Auto)
+* feat: add Car UI mode with larger fonts, icons, and touch targets for car head-unit displays
+* feat: add hardware media key (steering wheel button) support — handles KEYCODE_MEDIA_PLAY_PAUSE, KEYCODE_MEDIA_PLAY, KEYCODE_MEDIA_PAUSE, KEYCODE_MEDIA_NEXT, KEYCODE_MEDIA_PREVIOUS, KEYCODE_HEADSETHOOK, DPAD_CENTER/ENTER
+* feat: add Car UI mode toggle in Settings → Car Head Unit
+* Car UI mode OFF: appearance and behaviour remain at prior defaults
+
+**Car UI mode — what changes:**
+- Text sizes increased across primary surfaces for easier readability on car screens
+- Minimum touch target height raised for safer in-car interaction
+- Steering wheel/hardware media keys reliably control playback via the active MediaSession
+
+**Supported hardware keys:**
+- KEYCODE_MEDIA_PLAY — resume playback
+- KEYCODE_MEDIA_PAUSE — pause playback
+- KEYCODE_MEDIA_PLAY_PAUSE — toggle play/pause
+- KEYCODE_HEADSETHOOK — toggle play/pause
+- KEYCODE_MEDIA_NEXT — skip to next track
+- KEYCODE_MEDIA_PREVIOUS — skip to previous track
+- KEYCODE_DPAD_CENTER / KEYCODE_ENTER — toggle play/pause (rotary knob press)
+
+**Known limitations:**
+- Car UI mode must be enabled manually in Settings; automatic detection is not implemented.
+- Visual scale overrides are applied at theme level; individual layouts use the system text-scale, so very large system font-scale settings may cause overflow on small screens.
+
+## What's Changed
 ## [4.12.6](https://github.com/eddyizm/tempo/releases/tag/v4.12.6) (2026-03-06)
 * doc: update USAGE with android auto configuration by @MaFo-28 in https://github.com/eddyizm/tempus/pull/481
 * chore(i18n): Update Polish translation by @skajmer in https://github.com/eddyizm/tempus/pull/483
